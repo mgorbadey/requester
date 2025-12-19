@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
-import { HttpMethod, Header, Request, Response as ApiResponse } from '../types'
+import { HttpMethod, Header, Response as ApiResponse } from '../types'
 import { sendRequest } from '../services/api'
 import './RequestBuilder.css'
 
 function RequestBuilder() {
   const { id: collectionId } = useParams<{ id?: string }>()
-  const { currentRequest, setCurrentRequest, setResponse, setLoading, setError, loading, updateRequest, addRequest, countdown, setCountdown, collections, setNotification } = useStore()
+  const { currentRequest, setResponse, setLoading, setError, loading, updateRequest, addRequest, countdown, setCountdown, collections, setNotification } = useStore()
   
   const [method, setMethod] = useState<HttpMethod>('GET')
   const [url, setUrl] = useState('')
