@@ -6,7 +6,7 @@ import './Collection.css'
 
 function Collection() {
   const { id } = useParams<{ id: string }>()
-  const { collections, setCurrentRequest } = useStore()
+  const { collections, setCurrentRequest, deleteRequest, setNotification, setResponse, setError, setLoading, setCountdown } = useStore()
   
   const collection = collections.find((c) => c.id === id)
 
@@ -30,10 +30,27 @@ function Collection() {
               <div
                 key={request.id}
                 className="request-item"
-                onClick={() => setCurrentRequest(request)}
+                onClick={() => {
+                  setCurrentRequest(request)
+                  setResponse(null)
+                  setError(null)
+                  setLoading(false)
+                  setCountdown(null)
+                }}
               >
                 <span className="request-method">{request.method}</span>
                 <span className="request-name">{request.name}</span>
+                <button
+                  className="btn-delete-request"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteRequest(request.id)
+                    setNotification({ message: `Request "${request.name}" deleted successfully`, type: 'error' })
+                  }}
+                  aria-label="Delete request"
+                >
+                  ×
+                </button>
               </div>
             ))
           )}

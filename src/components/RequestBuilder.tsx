@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { useParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { HttpMethod, Header, Request, Response as ApiResponse } from '../types'
 import { sendRequest } from '../services/api'
 import './RequestBuilder.css'
 
 function RequestBuilder() {
-  const { currentRequest, setCurrentRequest, setResponse, setLoading, setError, loading, updateRequest, addRequest, countdown, setCountdown } = useStore()
+  const { id: collectionId } = useParams<{ id?: string }>()
+  const { currentRequest, setCurrentRequest, setResponse, setLoading, setError, loading, updateRequest, addRequest, countdown, setCountdown, collections, setNotification } = useStore()
   
   const [method, setMethod] = useState<HttpMethod>('GET')
   const [url, setUrl] = useState('')
@@ -23,6 +25,13 @@ function RequestBuilder() {
       setHeaders(currentRequest.headers.length > 0 ? currentRequest.headers : [{ key: '', value: '', enabled: true }])
       setBody(currentRequest.body || '')
       setRequestName(currentRequest.name)
+    } else {
+      // Reset to default clean state when currentRequest is null
+      setMethod('GET')
+      setUrl('')
+      setHeaders([{ key: '', value: '', enabled: true }])
+      setBody('')
+      setRequestName('')
     }
   }, [currentRequest])
 
@@ -158,12 +167,12 @@ function RequestBuilder() {
 
   const handleSave = () => {
     if (!requestName.trim()) {
-      alert('Please enter a request name')
+      setNotification({ message: 'Please enter a request name', type: 'error' })
       return
     }
 
     if (!url.trim()) {
-      alert('Please enter a URL')
+      setNotification({ message: 'Please enter a URL', type: 'error' })
       return
     }
 
@@ -178,7 +187,7 @@ function RequestBuilder() {
         }
       }
     } else if (requestUrl.startsWith('/') && !requestUrl.startsWith('//')) {
-      alert('Relative URLs are not supported. Please use a full URL (e.g., http://api.example.com/endpoint)')
+      setNotification({ message: 'Relative URLs are not supported. Please use a full URL (e.g., http://api.example.com/endpoint)', type: 'error' })
       return
     }
 
@@ -190,17 +199,24 @@ function RequestBuilder() {
       body: body.trim() || undefined,
     }
 
-    if (currentRequest) {
-      updateRequest(currentRequest.id, request)
-      alert('Request updated successfully!')
-    } else {
-      const newRequest: Request = {
-        ...request,
-        id: Date.now().toString(),
+    // Check if a request with the same name exists in the collection
+    if (collectionId) {
+      const collection = collections.find((c) => c.id === collectionId)
+      const existingRequest = collection?.requests.find((r) => r.name.trim() === requestName.trim())
+      
+      if (existingRequest) {
+        // Update existing request
+        updateRequest(existingRequest.id, request)
+        setNotification({ message: 'Request updated successfully!', type: 'success' })
+      } else {
+        // Create new request
+        addRequest(request, collectionId)
+        setNotification({ message: 'Request saved successfully!', type: 'success' })
       }
-      addRequest(request)
-      setCurrentRequest(newRequest)
-      alert('Request saved successfully!')
+    } else {
+      // No collection ID, always create new (Home page)
+      addRequest(request, collectionId)
+      setNotification({ message: 'Request saved successfully!', type: 'success' })
     }
   }
 
@@ -228,7 +244,11 @@ function RequestBuilder() {
               disabled={loading}
             />
           </div>
-          <button onClick={handleSave} className="btn-save">
+          <button 
+            onClick={handleSave} 
+            className="btn-save"
+            disabled={!url.trim() || !requestName.trim() || loading}
+          >
             Save
           </button>
           <button onClick={handleSend} className="btn-send" disabled={!url.trim() || loading}>

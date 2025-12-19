@@ -67,12 +67,17 @@
 }
 
 .btn-save {
-  background-color: #95a5a6;
+  background-color: #3498db;
   color: white;
 }
 
-.btn-save:hover {
-  background-color: #7f8c8d;
+.btn-save:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.btn-save:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
 }
 
 .btn-send {

@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 import { Request, Collection, Response } from '../types'
 
+export interface Notification {
+  message: string
+  type: 'success' | 'error'
+}
+
 interface AppState {
   collections: Collection[]
   currentRequest: Request | null
@@ -8,9 +13,10 @@ interface AppState {
   loading: boolean
   error: string | null
   countdown: number | null
+  notification: Notification | null
   
   // Collections
-  addCollection: (name: string) => void
+  addCollection: (name: string) => string
   deleteCollection: (id: string) => void
   updateCollection: (id: string, name: string) => void
   
@@ -25,6 +31,7 @@ interface AppState {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   setCountdown: (countdown: number | null) => void
+  setNotification: (notification: Notification | null) => void
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -34,18 +41,19 @@ export const useStore = create<AppState>((set) => ({
   loading: false,
   error: null,
   countdown: null,
+  notification: null,
   
-  addCollection: (name) =>
+  addCollection: (name) => {
+    const newCollection = {
+      id: Date.now().toString(),
+      name,
+      requests: [],
+    }
     set((state) => ({
-      collections: [
-        ...state.collections,
-        {
-          id: Date.now().toString(),
-          name,
-          requests: [],
-        },
-      ],
-    })),
+      collections: [...state.collections, newCollection],
+    }))
+    return newCollection.id
+  },
   
   deleteCollection: (id) =>
     set((state) => ({
@@ -74,6 +82,7 @@ export const useStore = create<AppState>((set) => ({
               ? { ...c, requests: [...c.requests, newRequest] }
               : c
           ),
+          currentRequest: newRequest,
         }
       }
       return { currentRequest: newRequest }
@@ -110,5 +119,7 @@ export const useStore = create<AppState>((set) => ({
   setError: (error) => set({ error }),
   
   setCountdown: (countdown) => set({ countdown }),
+  
+  setNotification: (notification) => set({ notification }),
 }))
 

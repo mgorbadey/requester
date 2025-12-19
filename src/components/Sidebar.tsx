@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import Modal from './Modal'
 import './Sidebar.css'
 
 function Sidebar() {
-  const { collections, addCollection } = useStore()
+  const { collections, addCollection, setCurrentRequest, setResponse, setError, setLoading, setCountdown } = useStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [collectionName, setCollectionName] = useState('')
+  const navigate = useNavigate()
 
   const handleAddCollection = () => {
     setIsModalOpen(true)
@@ -16,9 +17,10 @@ function Sidebar() {
   const handleSubmitCollection = (e: React.FormEvent) => {
     e.preventDefault()
     if (collectionName.trim()) {
-      addCollection(collectionName.trim())
+      const collectionId = addCollection(collectionName.trim())
       setCollectionName('')
       setIsModalOpen(false)
+      navigate(`/collection/${collectionId}`)
     }
   }
 
@@ -37,7 +39,17 @@ function Sidebar() {
           </button>
         </div>
         <nav className="sidebar-nav">
-          <Link to="/" className="nav-item">
+          <Link 
+            to="/" 
+            className="nav-item"
+            onClick={() => {
+              setCurrentRequest(null)
+              setResponse(null)
+              setError(null)
+              setLoading(false)
+              setCountdown(null)
+            }}
+          >
             <span>🏠</span> Home
           </Link>
           {collections.map((collection) => (
